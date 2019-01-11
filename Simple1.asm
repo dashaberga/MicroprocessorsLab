@@ -13,7 +13,7 @@ start
 loop	movff 	0x06, PORTC
 	incf 	0x06, W, ACCESS
 test	movwf	0x06, ACCESS	    ; Test for end of loop condition
-	movlw 	0x63
+	movf    PORTD, W
 	cpfsgt 	0x06, ACCESS
 	bra 	loop		    ; Not yet finished goto start of loop again
 	goto 	0x0		    ; Re-run program from start
