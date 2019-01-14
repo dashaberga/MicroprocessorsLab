@@ -29,6 +29,4 @@ delay	movlw   0x13
 delay2  decfsz  0x04		    ; Decremant counter, skip if zero
 	bra     delay2		    ; Loop back to delay2
 	return			    ; Return to delay loop
-	
 	end
-Test
