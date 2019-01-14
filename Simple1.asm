@@ -7,12 +7,12 @@
 	org 0x100		    ; Main code starts here at address 0x100
 
 start
-	movlw   0x13
-	movwf   0x05
 	movlw 	0x0
 	movwf	TRISC, ACCESS	    ; Port C all outputs
 	bra 	test
 loop	call    delay, 0
+	movlw   0x13
+	movwf   0x05
 	movff 	0x06, PORTC
 	incf 	0x06, W, ACCESS
 test	movwf	0x06, ACCESS	    ; Test for end of loop condition
@@ -20,8 +20,14 @@ test	movwf	0x06, ACCESS	    ; Test for end of loop condition
 	cpfsgt 	0x06, ACCESS
 	bra 	loop		    ; Not yet finished goto start of loop again
 	goto 	0x0		    ; Re-run program from start
-delay	decfsz  0x05
+delay	movlw   0x13
+	movwf   0x04
+	call delay2
+	decfsz  0x05
 	bra     delay
+	return
+delay2  decfsz  0x04
+	bra delay2
 	return
 	
 	end
