@@ -31,3 +31,4 @@ delay2  decfsz  0x04		    ; Decremant counter, skip if zero
 	return			    ; Return to delay loop
 	
 	end
+Test
