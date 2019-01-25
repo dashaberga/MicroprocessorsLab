@@ -6,6 +6,8 @@
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
 delay_count res 1   ; reserve one byte for counter in the delay routine
+delay_cnt_2 res 1   ; reserve one byte for counter in the delay routine
+
 
 tables	udata	0x400    ; reserve data anywhere in RAM (here at 0x400)
 myArray res 0x80    ; reserve 128 bytes for message data
@@ -15,8 +17,8 @@ rst	code	0    ; reset vector
 
 pdata	code    ; a section of programme memory for storing data
 	; ******* myTable, data in programme memory, and its length *****
-myTable data	    "Hello World!\n"	; message, plus carriage return
-	constant    myTable_l=.13	; length of data
+myTable data	    "I am alive!!!\n"	; message, plus carriage return
+	constant    myTable_l=.12	; length of data
 	
 main	code
 	; ******* Programme FLASH read Setup Code ***********************
@@ -48,12 +50,27 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movlw	myTable_l	; output message to UART
 	lfsr	FSR2, myArray
 	call	UART_Transmit_Message
-
+	
 	goto	$		; goto current line in code
 
 	; a delay subroutine if you need one, times around loop in delay_count
-delay	decfsz	delay_count	; decrement until zero
-	bra delay
+
+delay_4us		    ; delay given in chunks of 4 microsecond in W
+	movwf	delay_count   ; now need to multiply by 16
+	swapf   delay_count,F ; swap nibbles
+	movlw	0x0f	    
+	andwf	delay_count,W ; move low nibble to W
+	movwf	delay_cnt_2   ; then to LCD_cnt_h
+	movlw	0xf0	    
+	andwf	delay_count,F ; keep high nibble in LCD_cnt_l
+	call	delay
 	return
 
+delay			; delay routine	4 instruction loop == 250ns	    
+	movlw 	0x00		; W=0
+lcdlp1	decf 	delay_count,F	; no carry when 0x00 -> 0xff
+	subwfb 	delay_cnt_2,F	; no carry when 0x00 -> 0xff
+	bc 	lcdlp1		; carry, then loop again
+	return
+	
 	end
