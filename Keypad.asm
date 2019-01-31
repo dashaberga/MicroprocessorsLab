@@ -1,8 +1,8 @@
 #include p18f87k22.inc
    
     
-    global Press_test
-    extern LCD_Write_Message
+    global Press_test, Keypad_Setup
+    extern LCD_Write_Message, Line_set_2, Line_set_1
     
  
  acs0	udata_acs   ; reserve data space in access ram
@@ -11,12 +11,21 @@
  output2  res 1
  input1   res 1
  input2   res 1
- cnt_l   res 1   ; reserve 1 byte for variable cnt_l
- cnt_h   res 1   ; reserve 1 byte for variable cnt_h
- cnt_ms  res 1   ; reserve 1 byte for ms counter
+ cnt_l    res 1   ; reserve 1 byte for variable cnt_l
+ cnt_h    res 1   ; reserve 1 byte for variable cnt_h
+ cnt_ms   res 1   ; reserve 1 byte for ms counter
+ position res 1   ; reserve 1 byte for tracking position on screen.
+		  ; lowest 4 bits are x, next bit is y
    
  Keypad code
     
+Keypad_Setup
+    movlw    0x00
+    movwf    position
+    movlw    0x00
+    movwf    PORTH
+    movwf    TRISH
+ 
 Press_test
     movlw    0x01
     movwf    counter1    
@@ -150,7 +159,7 @@ lp1	decf 	cnt_l,F	; no carry when 0x00 -> 0xff
 	bc 	lp1		; carry, then loop again
 	return	    
     
-translate
+translate        ;multiple if statements for every valid command
 	movff output1, output2
 	movlw 0xEE
 	subwf output2
@@ -231,133 +240,178 @@ translate
 	subwf output2
 	bz characterF
 	
-character1	
-	movlw 0x31
-	movwf output2
+character1	;print the ascii character onto the screen
+	movlw   0x31
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 character2	
-	movlw 0x32
-	movwf output2
+	movlw   0x32
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 character3	
-	movlw 0x33
-	movwf output2
+	movlw   0x33
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 character4	
-	movlw 0x34
-	movwf output2
+	movlw   0x34
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 character5	
-	movlw 0x35
-	movwf output2
+	movlw   0x35
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 character6	
-	movlw 0x36
-	movwf output2
+	movlw   0x36
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 character7	
-	movlw 0x37
-	movwf output2
+	movlw   0x37
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 character8	
-	movlw 0x38
-	movwf output2
+	movlw   0x38
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 character9	
-	movlw 0x39
-	movwf output2
+	movlw   0x39
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 character0	
-	movlw 0x30
-	movwf output2
+	movlw   0x30
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 characterA	
-	movlw 0x41
-	movwf output2
+	movlw   0x41
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 characterB	
-	movlw 0x42
-	movwf output2
+	movlw   0x42
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 characterC	
-	movlw 0x43
-	movwf output2
+	movlw   0x43
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 characterD	
-	movlw 0x44
-	movwf output2
+	movlw   0x44
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 characterE	
-	movlw 0x45
-	movwf output2
+	movlw   0x45
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	return
+	bra     release
 	
 characterF	
-	movlw 0x46
-	movwf output2
+	movlw   0x46
+	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
+	bra     release
+    
+release   ;detects when a button is released
+	movff    output1, output2
+	movlw    0xF0    ;sets 0-3 to output and 4-7 to input
+        movwf    TRISE
+        movlw    .2
+        call     delay_ms
+	movff    PORTE, WREG
+	subwf    output2
+	movlw    0x0F    ;sets 0-3 to output and 4-7 to input
+        movwf    TRISE
+        movlw    .2
+        call     delay_ms
+        movff    PORTE, WREG
+	subwf    output2
+	bz       release
+	
+	movlw    0x0F
+	cpfseq   position
+	bra      line2
+	bra      line_change
+line2
+	movlw    0x1F
+	cpfseq   position
+	bra      finish
+	bra      line_change
+finish
+	incf     position
+finish2
+	movff    position, PORTH
 	return
+	
+line_change
+    movlw    0x0F
+    subwf    position
+    bz       set_line2
+    movlw    0x00
+    movwf    position
+    call     Line_set_1
+    bra      finish2
+set_line2
+    movlw    0x10
+    movwf    position
+    call     Line_set_2
+    bra      finish2
     
 end
 
