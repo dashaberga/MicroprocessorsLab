@@ -1,8 +1,9 @@
 	#include p18f87k22.inc
 
 	extern	UART_Setup, UART_Transmit_Message  ; external UART subroutines
-	extern  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1 ; external LCD subroutines
+	extern  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1,LCD_Write_Hex ; external LCD subroutines
 	extern  Press_test, Keypad_Setup
+	extern  ADC_Setup, ADC_Read		    ; external ADC routines
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -27,7 +28,8 @@ setup	bcf	EECON1, CFGS	; point to Flash program memory
 	bsf	EECON1, EEPGD 	; access Flash program memory
 	call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup LCD
-	call    Keypad_Setup
+	call    Keypad_Setup	; setup Keypad
+	call	ADC_Setup	; setup ADC
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -54,15 +56,24 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movlw	myTable_l	; output message to UART
 	lfsr	FSR2, myArray
 	call	UART_Transmit_Message
-	
-        call    Line_set_1
-magic_code
-	call Press_test
-	bra magic_code
-	
-	
-	goto	$		; goto current line in code
+       	
 
+;magic_code
+;	call Press_test
+;	bra magic_code
+	
+measure_loop
+	call    Line_set_1
+	call	ADC_Read
+	movf	ADRESH,W
+	call	LCD_Write_Hex
+	movf	ADRESL,W
+	call	LCD_Write_Hex
+	goto	measure_loop		; goto current line in code
+
+	goto	$		; goto current line in code
+	
+	
 	; a delay subroutine if you need one, times around loop in delay_count
 
 delay_4us		    ; delay given in chunks of 4 microsecond in W
@@ -70,9 +81,9 @@ delay_4us		    ; delay given in chunks of 4 microsecond in W
 	swapf   delay_count,F ; swap nibbles
 	movlw	0x0f	    
 	andwf	delay_count,W ; move low nibble to W
-	movwf	delay_cnt_2   ; then to LCD_cnt_h
+	movwf	delay_cnt_2   ; then to cnt_h
 	movlw	0xf0	    
-	andwf	delay_count,F ; keep high nibble in LCD_cnt_l
+	andwf	delay_count,F ; keep high nibble in cnt_l
 	call	delay
 	return
 
