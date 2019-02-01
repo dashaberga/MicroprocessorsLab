@@ -9,8 +9,7 @@ acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
 delay_count res 1   ; reserve one byte for counter in the delay routine
 delay_cnt_2 res 1   ; reserve one byte for counter in the delay routine
-
-
+ 
 tables	udata	0x400    ; reserve data anywhere in RAM (here at 0x400)
 myArray res 0x80    ; reserve 128 bytes for message data
 
@@ -19,8 +18,8 @@ rst	code	0    ; reset vector
 
 pdata	code    ; a section of programme memory for storing data
 	; ******* myTable, data in programme memory, and its length *****
-myTable data	    "I'm ready!\n"	; message, plus carriage return
-	constant    myTable_l=.11	; length of data
+myTable data	    "I'm fixed now!\n"	; message, plus carriage return
+	constant    myTable_l=.14	; length of data
 	
 main	code
 	; ******* Programme FLASH read Setup Code ***********************
@@ -57,11 +56,10 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	lfsr	FSR2, myArray
 	call	UART_Transmit_Message
        	
-
 ;magic_code
 ;	call Press_test
 ;	bra magic_code
-	
+		
 measure_loop
 	call    Line_set_1
 	call	ADC_Read
