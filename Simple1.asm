@@ -4,6 +4,7 @@
 	extern  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1,LCD_Write_Hex ; external LCD subroutines
 	extern  Press_test, Keypad_Setup
 	extern  ADC_Setup, ADC_Read		    ; external ADC routines
+	extern  DAC_Setup
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -29,6 +30,7 @@ setup	bcf	EECON1, CFGS	; point to Flash program memory
 	call	LCD_Setup	; setup LCD
 	call    Keypad_Setup	; setup Keypad
 	call	ADC_Setup	; setup ADC
+	call    DAC_Setup
 	goto	start
 	
 	; ******* Main programme ****************************************
