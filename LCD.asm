@@ -149,7 +149,7 @@ LCD_delay			; delay routine	4 instruction loop == 250ns
 	movlw 	0x00		; W=0
 lcdlp1	decf 	LCD_cnt_l,F	; no carry when 0x00 -> 0xff
 	subwfb 	LCD_cnt_h,F	; no carry when 0x00 -> 0xff
-	bc 	lcdlp1		; carry, then loop again
+ 	bc 	lcdlp1		; carry, then loop again
 	return			; carry reset so return
 
 LCD_clear

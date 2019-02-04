@@ -63,14 +63,14 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 ;	bra magic_code
 
 	
-;measure_loop
-;	call    Line_set_1
-;	call	ADC_Read
-;	movf	ADRESH,W
-;	call	LCD_Write_Hex
-;	movf	ADRESL,W
-;	call	LCD_Write_Hex
-;	goto	measure_loop		; goto current line in code
+measure_loop
+	call    Line_set_1
+	call	ADC_Read
+	movf	ADRESH,W
+	call	LCD_Write_Hex
+	movf	ADRESL,W
+	call	LCD_Write_Hex
+	goto	measure_loop		; goto current line in code
 
 	goto	$		; goto current line in code
 	

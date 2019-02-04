@@ -5,19 +5,19 @@
     extern LCD_Write_Message, Line_set_2, Line_set_1
     
  
- acs0	udata_acs   ; reserve data space in access ram
- counter1 res 1
- output1  res 1
- output2  res 1
- input1   res 1
- input2   res 1
- cnt_l    res 1   ; reserve 1 byte for variable cnt_l
- cnt_h    res 1   ; reserve 1 byte for variable cnt_h
- cnt_ms   res 1   ; reserve 1 byte for ms counter
- position res 1   ; reserve 1 byte for tracking position on screen.
+acs0	udata_acs   ; reserve data space in access ram
+counter1 res 1
+output1  res 1
+output2  res 1
+input1   res 1
+input2   res 1
+cnt_l    res 1   ; reserve 1 byte for variable cnt_l
+cnt_h    res 1   ; reserve 1 byte for variable cnt_h
+cnt_ms   res 1   ; reserve 1 byte for ms counter
+position res 1   ; reserve 1 byte for tracking position on screen.
 		  ; lowest 4 bits are x, next bit is y
    
- Keypad code
+Keypad code
     
 Keypad_Setup
     movlw    0x00
@@ -110,7 +110,7 @@ button_select2
     addwf   output1
     tstfsz  counter1
     bra     something
-    movf    output1, WREG
+    movf    output1, w
     subwf   output2
     bz      press
     bra     invalid
@@ -413,6 +413,6 @@ set_line2
     call     Line_set_2
     bra      finish2
     
-end
+    end
 
 
