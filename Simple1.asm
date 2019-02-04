@@ -9,7 +9,7 @@ int_hi	code	0x0008	; high vector, no low vector
 	incf	LATD		; increment PORTD
 	bcf	INTCON,TMR0IF	; clear interrupt flag
 	retfie	FAST		; fast return from interrupt
-
+	
 main	code
 start	clrf	TRISD		; Set PORTD as all outputs
 	clrf	LATD		; Clear PORTD outputs
