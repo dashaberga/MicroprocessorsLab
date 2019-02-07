@@ -1,10 +1,9 @@
 	#include p18f87k22.inc
 
-	extern	UART_Setup, UART_Transmit_Message  ; external UART subroutines
 	extern  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1,LCD_Write_Hex ; external LCD subroutines
 	extern  Press_test, Keypad_Setup
-	extern  ADC_Setup, ADC_Read		    ; external ADC routines
-	extern  DAC_Setup
+	extern  Multiply_Setup		    ; external ADC routines
+	extern  DAC_Setup, time_sec
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -19,17 +18,16 @@ rst	code	0    ; reset vector
 
 pdata	code    ; a section of programme memory for storing data
 	; ******* myTable, data in programme memory, and its length *****
-myTable data	    "I'm fixed now!\n"	; message, plus carriage return
-	constant    myTable_l=.14	; length of data
+myTable data	    "I am alarm clock\n"	; message, plus carriage return
+	constant    myTable_l=.17	; length of data
 	
 main	code
 	; ******* Programme FLASH read Setup Code ***********************
 setup	bcf	EECON1, CFGS	; point to Flash program memory  
 	bsf	EECON1, EEPGD 	; access Flash program memory
-	call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup LCD
 	call    Keypad_Setup	; setup Keypad
-	call	ADC_Setup	; setup ADC
+	call	Multiply_Setup	; setup ADC
 	call    DAC_Setup
 	goto	start
 	
@@ -53,24 +51,14 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	movlw	myTable_l-1	; output message to LCD (leave out "\n")
 	lfsr	FSR2, myArray
 	call	LCD_Write_Message
-	
-	movlw	myTable_l	; output message to UART
-	lfsr	FSR2, myArray
-	call	UART_Transmit_Message
-       	
-;magic_code
-;	call Press_test
-;	bra magic_code
-
-	
-measure_loop
 	call    Line_set_1
-	call	ADC_Read
-	movf	ADRESH,W
-	call	LCD_Write_Hex
-	movf	ADRESL,W
-	call	LCD_Write_Hex
-	goto	measure_loop		; goto current line in code
+	
+       	
+magic_code
+	movff time_sec, W
+	call LCD_Write_Hex
+	call Line_set_1
+	bra magic_code
 
 	goto	$		; goto current line in code
 	
