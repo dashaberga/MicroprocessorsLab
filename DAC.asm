@@ -19,6 +19,7 @@ int_hi code 0x0008 ; high vector, no low vector
 DAC code
 
 DAC_Setup
+DAC_Setup
     movlw b'10000111' ; Set timer0 to 16-bit, Fosc/4/256 
     movwf T0CON ; = 62.5KHz clock rate, approx 1sec rollover
     bsf INTCON,TMR0IE ; Enable timer0 interrupt 
@@ -30,5 +31,4 @@ DAC_Setup
     return
     
     end
-
 

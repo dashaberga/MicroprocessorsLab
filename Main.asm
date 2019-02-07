@@ -55,7 +55,7 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	
        	
 magic_code
-	movff time_sec, W
+	movff time_sec, WREG
 	call LCD_Write_Hex
 	call Line_set_1
 	bra magic_code
