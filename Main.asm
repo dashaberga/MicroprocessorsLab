@@ -2,7 +2,7 @@
 
 	extern  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1,LCD_Write_Hex ; external LCD subroutines
 	extern  Press_test, Keypad_Setup
-	extern  Multiply_Setup		    ; external ADC routines
+	extern  Multiply_Setup, multiply		    ; external ADC routines
 	extern  DAC_Setup, time_sec, time_min, time_hour
 	
 acs0	udata_acs   ; reserve data space in access ram
@@ -56,10 +56,13 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
        	
 magic_code
 	movff time_hour, WREG
+	call multiply
 	call LCD_Write_Hex
 	movff time_min, WREG
+	call multiply
 	call LCD_Write_Hex
 	movff time_sec, WREG
+	call multiply
 	call LCD_Write_Hex
 	call Line_set_1
 	bra magic_code
