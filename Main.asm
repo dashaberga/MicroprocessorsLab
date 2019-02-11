@@ -28,7 +28,6 @@ setup	bcf	EECON1, CFGS	; point to Flash program memory
 	call	LCD_Setup	; setup LCD
 	call    Keypad_Setup	; setup Keypad
 	call	Multiply_Setup	; setup ADC
-	call    DAC_Setup
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -53,7 +52,7 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	call	LCD_Write_Message
 	call    Line_set_1
 	
-       	
+       	call    DAC_Setup
 magic_code
 	movff time_hour, WREG
 	call multiply
