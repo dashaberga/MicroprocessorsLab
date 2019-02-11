@@ -9,9 +9,12 @@ time_min  res 1
 time_hour res 1
 time_day  res 1
 time_day2 res 1
+time_week res 1
 time_month res 1
 time_year res 1
 temp_storage res 1
+month_days res 1
+
 
 int_hi code 0x0008 ; high vector, no low vector
     btfss PIR1,TMR2IF ; check that this is timer0 interrupt 
@@ -50,16 +53,44 @@ inc_hour
     movff time_hour, temp_storage
     movlw 0x17
     subwf temp_storage
-    bz new_day
+    bz inc_day
     incf time_hour
     bcf PIR1,TMR2IF ; clear interrupt flag
     retfie FAST ; fast return from interrupt
-new_day
+inc_day
     movlw 0x00
     movwf time_hour
     movff time_day, temp_storage
     movlw 0x06
-    subwf temp_storage    
+    subwf temp_storage
+    bz new_week
+    incf time_day
+date
+    movff time_day, temp_storage
+    movf  month_days, W
+    subwf temp_storage
+    bz inc_month
+    bcf PIR1,TMR2IF ; clear interrupt flag
+    retfie FAST ; fast return from interrupt
+
+new_week
+    movlw 0x00
+    movwf time_day
+    bra date
+    
+inc_month
+    movff time_month, temp_storage
+    movlw 0x0B
+    subwf temp_storage
+    bz inc_year
+    incf time_month
+    bcf PIR1,TMR2IF ; clear interrupt flag
+    retfie FAST ; fast return from interrupt
+
+inc_year
+    movlw 0x10
+    addwf time_month
+    incf time_year
     bcf PIR1,TMR2IF ; clear interrupt flag
     retfie FAST ; fast return from interrupt
     
@@ -73,14 +104,21 @@ DAC_Setup
     bsf PIE1,TMR2IE ; Enable timer0 interrupt 
     bsf INTCON,GIE ; Enable all interrupts return
     bsf INTCON,PEIE ; Enable all interrupts return
-    movlw 0x00
+    movlw 0x40
     movwf time_millisec
+    movwf time_day
+    movwf time_day2
+    movwf time_week
+    movwf time_month
+    movwf time_year
     movlw 0x30
     movwf time_sec
-    movlw 0x17
-    movwf time_hour
     movlw 0x3b
     movwf time_min
+    movlw 0x17
+    movwf time_hour
+    movlw 0x1e
+    movwf month_days
     return
     
     end
