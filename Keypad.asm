@@ -3,6 +3,7 @@
     
     global Press_test, Keypad_Setup
     extern LCD_Write_Message, Line_set_2, Line_set_1
+    extern mode_counter
     
  
 acs0	udata_acs   ; reserve data space in access ram
@@ -360,12 +361,15 @@ characterE
 	call	LCD_Write_Message
 	bra     release
 	
-characterF	
-	movlw   0x46
-	movwf   output2
-	movlw	1	; output message to LCD
-	lfsr	FSR2, output2
-	call	LCD_Write_Message
+characterF
+	btfss   mode_counter, 0
+	bra	set_time
+	bra	start_time
+set_time
+	bsf	mode_counter, 0
+	bra	release
+start_time
+	bcf     mode_counter, 0
 	bra     release
     
 release   ;detects when a button is released

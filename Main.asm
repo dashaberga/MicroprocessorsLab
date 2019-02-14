@@ -1,14 +1,17 @@
 	#include p18f87k22.inc
 
+	global  mode_counter
+	
 	extern  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1,LCD_Write_Hex ; external LCD subroutines
 	extern  Press_test, Keypad_Setup
 	extern  Multiply_Setup, multiply		    ; external ADC routines
-	extern  DAC_Setup, time_sec, time_min, time_hour
+	extern  DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
 delay_count res 1   ; reserve one byte for counter in the delay routine
 delay_cnt_2 res 1   ; reserve one byte for counter in the delay routine
+mode_counter res 1  ; reserve one byte for testing whether to run clock, set alarm etc
  
 tables	udata	0x400    ; reserve data anywhere in RAM (here at 0x400)
 myArray res 0x80    ; reserve 128 bytes for message data
@@ -28,6 +31,8 @@ setup	bcf	EECON1, CFGS	; point to Flash program memory
 	call	LCD_Setup	; setup LCD
 	call    Keypad_Setup	; setup Keypad
 	call	Multiply_Setup	; setup ADC
+	movlw   0x00
+	movwf   mode_counter
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -54,6 +59,9 @@ loop 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	
        	call    DAC_Setup
 magic_code
+	btfsc mode_counter, 0
+	bra time_set
+	
 	movff time_hour, WREG
 	call multiply
 	call LCD_Write_Hex
@@ -63,10 +71,36 @@ magic_code
 	movff time_sec, WREG
 	call multiply
 	call LCD_Write_Hex
+	
+	movff time_day, WREG
+	call multiply
+	call LCD_Write_Hex
+	movff time_month, WREG
+	call multiply
+	call LCD_Write_Hex
+	movff time_year, WREG
+	call multiply
+	call LCD_Write_Hex
+	movff time_week, WREG
+	call multiply
+	call LCD_Write_Hex
 	call Line_set_1
+	
+	call Press_test
+	
 	bra magic_code
 
-	goto	$		; goto current line in code
+time_set
+	btfss mode_counter, 0
+	bra magic_code
+	
+	
+	
+	
+	call Press_test
+	bra time_set
+	
+	goto	$		; goto current line in code , time_day, time_week, time_month, time_year
 	
 	
 	; a delay subroutine if you need one, times around loop in delay_count
