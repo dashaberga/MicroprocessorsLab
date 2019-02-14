@@ -62,6 +62,7 @@ magic_code
 	btfsc mode_counter, 0
 	bra time_set
 	
+	call Line_set_1
 	movff time_hour, WREG
 	call multiply
 	call LCD_Write_Hex
@@ -84,7 +85,7 @@ magic_code
 	movff time_week, WREG
 	call multiply
 	call LCD_Write_Hex
-	call Line_set_1
+	
 	
 	call Press_test
 	
@@ -93,10 +94,6 @@ magic_code
 time_set
 	btfss mode_counter, 0
 	bra magic_code
-	
-	
-	
-	
 	call Press_test
 	bra time_set
 	

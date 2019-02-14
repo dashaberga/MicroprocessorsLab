@@ -23,9 +23,6 @@ Keypad code
 Keypad_Setup
     movlw    0x00
     movwf    position
-    movlw    0x00
-    movwf    PORTH
-    movwf    TRISH
  
 Press_test
     movlw    0x01
@@ -400,7 +397,6 @@ line2
 finish
 	incf     position
 finish2
-	movff    position, PORTH
 	return
 	
 line_change
