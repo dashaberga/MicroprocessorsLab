@@ -36,7 +36,7 @@ LCD_Setup
 	call	LCD_Send_Byte_I
 	movlw	.10		; wait 40us
 	call	LCD_delay_x4us
-	movlw	b'00001111'	; display on, cursor on, blinking on
+	movlw	b'00001100'	; display on, cursor off, blinking off
 	call	LCD_Send_Byte_I
 	movlw	.10		; wait 40us
 	call	LCD_delay_x4us

@@ -1,6 +1,6 @@
 #include p18f87k22.inc
 
-    global DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year
+    global DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, month_days, inc_month
     
     extern mode_counter
     
@@ -25,7 +25,7 @@ int_hi code 0x0008 ; high vector, no low vector
     btfsc mode_counter, 0
     bra time_stop
     movff time_millisec, temp_storage
-    movlw 0xf9
+    movlw 0xf9 ;should be f9
     subwf temp_storage
     bz inc_second
     incf time_millisec
@@ -71,6 +71,8 @@ inc_day
     bz new_week
     incf time_week
 date
+    btfsc mode_counter, 1
+    bra   time_stop
     movff time_day, temp_storage
     movf  month_days, W
     subwf temp_storage
@@ -135,16 +137,11 @@ inc_month
     subwf    temp_storage
     bz       month30
     
-    movff time_month, temp_storage
-    movlw    0x0B
-    subwf    temp_storage
-    bz       month31
+    bra       month31
     
-    movff time_month, temp_storage
-    movlw    0x0C
-    subwf    temp_storage
-    bz       month31
 inc_month2
+    btfsc mode_counter, 1
+    return
     movlw 0x01
     movwf time_day
     movff time_month, temp_storage
@@ -166,7 +163,10 @@ month31
     bra inc_month2
     
 february
-    btfsc time_leap, 2
+    btfsc time_year, 1
+    bra february_no_leap
+    btfsc time_year, 0
+    bra february_no_leap
     bra february_leap
     movlw 0x1c
     movwf month_days
@@ -203,6 +203,8 @@ DAC_Setup
     bsf INTCON,GIE ; Enable all interrupts return
     bsf INTCON,PEIE ; Enable all interrupts return
     movlw 0x00
+    movwf TRISH
+    movwf LATH
     movwf time_millisec
     movlw 0x1f
     movwf time_day
