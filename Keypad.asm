@@ -341,7 +341,7 @@ week_up
 	bz no_increase
 	incf time_week
 	call write_time
-	
+	goto release
 up_date
 	movff set_position, output1
 	movlw 0x00
@@ -360,7 +360,7 @@ up_date
 	
 day_up
 	movff time_day, output1
-	movf  month_days, WREG
+	movff  month_days, WREG
 	subwf output1
 	bz no_increase
 	incf time_day
@@ -373,11 +373,36 @@ month_up
 	bz no_increase
 	call inc_month
 	incf time_month
+	movff month_days, WREG
+	cpfsgt time_day
+	goto fine
+	movff month_days, time_day
 	call write_date
 	goto release
 year_up
 	movff time_year, output1
 	incf time_year
+	movlw 0x02
+	cpfseq time_month
+	bra year_finish
+	movlw 0x1d
+	cpfseq time_day
+	bra feb_test
+	decf time_day
+feb_test
+	btfsc time_year, 0
+	bra feb_no_leap
+	btfsc time_year, 1
+	bra feb_no_leap	
+feb_leap
+	movlw 0x1d
+	movwf month_days
+	bra year_finish
+feb_no_leap	
+	movlw 0x1c
+	movwf month_days
+	bra year_finish
+year_finish
 	call write_date
 	goto release
 no_increase
@@ -738,8 +763,8 @@ month_down
 	decf time_month
 	call inc_month
 	incf time_month
-	movf time_day, WREG
-	cpfsgt month_days
+	movff month_days, WREG
+	cpfsgt time_day
 	bra fine
 	movff month_days, time_day
 fine	
@@ -752,8 +777,14 @@ year_down
 	subwf output1
 	bz no_decrease
 	decf time_year
-	call write_date
-	goto release
+	movlw 0x02
+	cpfseq time_month
+	goto year_finish
+	movlw 0x1d
+	cpfseq time_day
+	goto feb_test
+	decf time_day
+	goto feb_test
 	
 no_decrease
 	goto release

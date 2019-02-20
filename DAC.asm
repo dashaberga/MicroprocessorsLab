@@ -168,6 +168,7 @@ february
     btfsc time_year, 0
     bra february_no_leap
     bra february_leap
+february_no_leap
     movlw 0x1c
     movwf month_days
     movlw 0x01
