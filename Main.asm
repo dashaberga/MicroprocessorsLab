@@ -5,7 +5,7 @@
 	extern  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1,LCD_Write_Hex ; external LCD subroutines
 	extern  Press_test, Keypad_Setup
 	extern  Multiply_Setup, multiply		    ; external ADC routines
-	extern  DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, alarm_sec, alarm_min, alarm_hour
+	extern  DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, alarm_sec, alarm_min, alarm_hour, alarm_min_cnt, alarm_sec_cnt
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -66,6 +66,10 @@ magic_code
 	bra time_set
 	btfsc mode_counter, 2
 	bra time_set
+	btfsc mode_counter, 5
+	bra snooze_countdown
+	btfsc mode_counter, 6
+	bra Final_alarm
 write_time	
 	call Line_set_1
 	movff time_hour, WREG
@@ -139,6 +143,44 @@ write_alarm
 	call spaces
 	return
 	
+snooze_countdown
+	call Line_set_1
+	call spaces
+	call spaces
+	call spaces
+	movff alarm_min_cnt, WREG
+	call multiply
+	call LCD_Write_Hex
+	call colon
+	movff alarm_sec_cnt, WREG
+	call multiply
+	call LCD_Write_Hex
+	call spaces
+	call spaces
+	call spaces
+	call spaces
+	call spaces
+	
+	call Press_test
+	
+	movlw 0x00
+	cpfseq alarm_sec_cnt
+	bra snooze_cont
+	cpfseq alarm_min_cnt
+	bra snooze_cont
+	bcf mode_counter,5
+	bsf mode_counter,6
+	
+snooze_cont
+	btfss mode_counter,5
+	bra magic_code
+	bra snooze_countdown
+	
+Final_alarm
+	btfss mode_counter,6
+	bra magic_code
+	call Press_test
+	bra Final_alarm
 	
 	goto	$		; goto current line in code , time_day, time_week, time_month, time_year
 	

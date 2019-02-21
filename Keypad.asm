@@ -4,7 +4,7 @@
     global Press_test, Keypad_Setup
     extern LCD_Write_Message, Line_set_2, Line_set_1, Toggle_Bell
     extern mode_counter, write_date, write_time, write_alarm
-    extern time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, month_days, inc_month, alarm_sec, alarm_min, alarm_hour
+    extern time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, month_days, inc_month, alarm_sec, alarm_min, alarm_hour, alarm_min_cnt, alarm_sec_cnt
     
  
 acs0	udata_acs   ; reserve data space in access ram
@@ -895,12 +895,23 @@ character0
 	bra     release
 	
 characterA	
-	movlw   0x41
-	movwf   output2
-	movlw	1	; output message to LCD
-	lfsr	FSR2, output2
-	call	LCD_Write_Message
+	btfsc   mode_counter, 4
+	bra     alarm_snooze
+	btfsc   mode_counter, 6
+	bra     alarm_kill
 	bra     release
+	
+alarm_snooze
+	bcf	mode_counter, 4
+	bsf	mode_counter, 5
+	movlw	0x05
+	movwf	alarm_min_cnt
+	clrf    alarm_sec_cnt
+	bra	release
+
+alarm_kill
+	bcf	mode_counter, 6
+	bra	release
 	
 characterB	
 	movlw   0x42

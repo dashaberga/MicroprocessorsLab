@@ -1,6 +1,6 @@
 #include p18f87k22.inc
 
-    global DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, month_days, inc_month, alarm_sec, alarm_min, alarm_hour
+    global DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, month_days, inc_month, alarm_sec, alarm_min, alarm_hour, alarm_min_cnt, alarm_sec_cnt
     
     extern mode_counter
     
@@ -17,6 +17,8 @@ time_leap res 1
 alarm_sec  res 1
 alarm_min  res 1
 alarm_hour res 1
+alarm_sec_cnt  res 1
+alarm_min_cnt  res 1 
 temp_storage res 1
 month_days res 1
 
@@ -32,12 +34,18 @@ int_hi code 0x0008 ; high vector, no low vector
     subwf temp_storage
     bz inc_second
     incf time_millisec
+    btfsc mode_counter, 4
+    call alarm_tone
+    btfsc mode_counter, 6
+    call alarm_tone
     bcf PIR1,TMR2IF ; clear interrupt flag
     retfie FAST ; fast return from interrupt
     
 inc_second
     btfss mode_counter, 2
     call  alarm_test
+    btfsc mode_counter, 5
+    call  snooze_dsec
     movlw 0x00
     movwf time_millisec
     movff time_sec, temp_storage
@@ -257,5 +265,89 @@ alarm_test
     bsf	 LATH, 1
     return
     
+alarm_tone
+    movlw 0x28
+    cpfseq time_millisec
+    bra alarm_tone2
+    call alarm_tone_toggle
+alarm_tone2
+    movlw 0x32
+    cpfseq time_millisec
+    bra alarm_tone3
+    call alarm_tone_toggle
+alarm_tone3
+    movlw 0x5A
+    cpfseq time_millisec
+    bra alarm_tone4
+    call alarm_tone_toggle
+alarm_tone4
+    movlw 0x64
+    cpfseq time_millisec
+    bra alarm_tone5
+    call alarm_tone_toggle
+alarm_tone5
+    movlw 0x8c
+    cpfseq time_millisec
+    bra alarm_tone6
+    call alarm_tone_toggle
+alarm_tone6
+    movlw 0x96
+    cpfseq time_millisec
+    bra alarm_tone7
+    call alarm_tone_toggle
+alarm_tone7
+    movlw 0xbe
+    cpfseq time_millisec
+    bra alarm_tone8
+    call alarm_tone_toggle
+alarm_tone8
+    movlw 0xcb
+    cpfseq time_millisec
+    bra alarm_tone_end
+    call alarm_tone_toggle
+alarm_tone_end
+    return
+    
+alarm_tone_toggle
+    btfss LATH, 2
+    bra tone_on
+    bra tone_off
+    
+tone_on
+    bsf LATH, 2    
+    return
+tone_off
+    bcf LATH, 2
+    return
+    
+snooze_dsec
+    movlw 0x00
+    cpfseq alarm_sec_cnt
+    bra snooze_dsec2
+    bra snooze_dsec3
+snooze_dsec2
+    decf alarm_sec_cnt
+    return
+snooze_dsec3
+    movlw 0x00
+    cpfseq alarm_min_cnt
+    bra snooze_dsec4
+    return
+snooze_dsec4
+    call snooze_dmin
+    movlw 0x3b
+    movwf alarm_sec_cnt
+    return
+snooze_dmin
+    movlw 0x00
+    cpfseq alarm_min_cnt
+    bra snooze_dmin2
+    bra snooze_dmin3
+snooze_dmin2
+    decf alarm_min_cnt
+    return
+snooze_dmin3
+    return
+
     end
 
