@@ -1,6 +1,6 @@
 #include p18f87k22.inc
 
-    global DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, month_days, inc_month
+    global DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, month_days, inc_month, alarm_sec, alarm_min, alarm_hour
     
     extern mode_counter
     
@@ -14,6 +14,9 @@ time_week res 1		; day of the week
 time_month res 1
 time_year res 1
 time_leap res 1
+alarm_sec  res 1
+alarm_min  res 1
+alarm_hour res 1
 temp_storage res 1
 month_days res 1
 
@@ -31,7 +34,10 @@ int_hi code 0x0008 ; high vector, no low vector
     incf time_millisec
     bcf PIR1,TMR2IF ; clear interrupt flag
     retfie FAST ; fast return from interrupt
+    
 inc_second
+    btfss mode_counter, 2
+    call  alarm_test
     movlw 0x00
     movwf time_millisec
     movff time_sec, temp_storage
@@ -168,6 +174,7 @@ february
     btfsc time_year, 0
     bra february_no_leap
     bra february_leap
+    
 february_no_leap
     movlw 0x1c
     movwf month_days
@@ -192,6 +199,8 @@ inc_year
 time_stop
     bcf PIR1,TMR2IF ; clear interrupt flag
     retfie FAST ; fast return from interrupt
+    
+    goto    $
     
 DAC code
 
@@ -225,6 +234,27 @@ DAC_Setup
     movwf time_hour
     movlw 0x1f
     movwf month_days
+    movlw 0x00
+    movwf alarm_sec
+    movwf alarm_min
+    movlw 0x07
+    movwf alarm_hour
+    return
+    
+alarm_test
+    btfss mode_counter, 3
+    return    
+    movff alarm_hour, WREG
+    cpfseq time_hour
+    return
+    movff alarm_min, WREG
+    cpfseq time_min
+    return
+    movff alarm_sec, WREG
+    cpfseq time_sec
+    return
+    bsf  mode_counter, 4
+    bsf	 LATH, 1
     return
     
     end

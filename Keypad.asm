@@ -2,9 +2,9 @@
    
     
     global Press_test, Keypad_Setup
-    extern LCD_Write_Message, Line_set_2, Line_set_1
-    extern mode_counter, write_date, write_time
-    extern time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, month_days, inc_month
+    extern LCD_Write_Message, Line_set_2, Line_set_1, Toggle_Bell
+    extern mode_counter, write_date, write_time, write_alarm
+    extern time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, month_days, inc_month, alarm_sec, alarm_min, alarm_hour
     
  
 acs0	udata_acs   ; reserve data space in access ram
@@ -288,6 +288,8 @@ character2
 	bra	up
 	btfsc   mode_counter, 1
 	bra     up_date
+	btfsc	mode_counter, 2
+	bra	up_alarm
 	goto	other1
 up
 	movff set_position, output1
@@ -407,7 +409,44 @@ year_finish
 	goto release
 no_increase
 	goto release
+
+up_alarm
+	movff set_position, output1
+	movlw 0x00
+	subwf output1
+	bz hour_up_a
 	
+	movff set_position, output1
+	movlw 0x01
+	subwf output1
+	bz minute_up_a
+	
+	bra second_up_a
+	
+hour_up_a
+	movff alarm_hour, output1
+	movlw 0x17
+	subwf output1
+	bz no_increase
+	incf alarm_hour
+	call write_alarm
+	goto release
+minute_up_a
+	movff alarm_min, output1
+	movlw 0x3b
+	subwf output1
+	bz no_increase
+	incf alarm_min
+	call write_alarm
+	goto release
+second_up_a
+	movff alarm_sec, output1
+	movlw 0x3b
+	subwf output1
+	bz no_increase
+	incf alarm_sec
+	call write_alarm
+	goto release
 other1
 	bra release
 character3	
@@ -423,6 +462,8 @@ character4
 	bra	left
 	btfsc   mode_counter, 1
 	bra     left_date
+	btfsc	mode_counter, 2
+	bra	left
 	bra	other1
 left	
 	movff set_position, output1
@@ -547,6 +588,8 @@ character6
 	bra	right
 	btfsc   mode_counter, 1
 	bra     right_date
+	btfsc	mode_counter, 2
+	bra	right
 	bra	other
 right	
 	movff set_position, output1
@@ -592,7 +635,9 @@ position_2
 	call chevron
 	bra other
 	
-position_3	
+position_3
+	btfsc mode_counter, 2
+	goto release
 	incf set_position
 	call Line_set_2
 	call spaces1
@@ -674,6 +719,8 @@ character8
 	bra	down
 	btfsc   mode_counter, 1
 	bra	down_date
+	btfsc   mode_counter, 2
+	bra	down_alarm
 	bra	other
 down
 	movff set_position, output1
@@ -696,11 +743,14 @@ down
 	subwf output1
 	bz week_down
 	
+no_decrease1
+	goto no_decrease
+	
 hour_down
 	movff time_hour, output1
 	movlw 0x00
 	subwf output1
-	bz no_decrease
+	bz no_decrease1
 	decf time_hour
 	call write_time
 	goto release
@@ -708,7 +758,7 @@ minute_down
 	movff time_min, output1
 	movlw 0x00
 	subwf output1
-	bz no_decrease
+	bz no_decrease1
 	decf time_min
 	call write_time
 	goto release
@@ -716,7 +766,7 @@ second_down
 	movff time_sec, output1
 	movlw 0x00
 	subwf output1
-	bz no_decrease
+	bz no_decrease1
 	decf time_sec
 	call write_time
 	goto release
@@ -724,7 +774,7 @@ week_down
 	movff time_week, output1
 	movlw 0x01
 	subwf output1
-	bz no_decrease
+	bz no_decrease1
 	decf time_week
 	call write_time
 	goto release
@@ -749,7 +799,7 @@ day_down
 	movff time_day, output1
 	movlw 0x01
 	subwf output1
-	bz no_decrease
+	bz no_decrease1
 	decf time_day
 	call write_date
 	goto release
@@ -758,7 +808,7 @@ month_down
 	movff time_month, output1
 	movlw 0x01
 	subwf output1
-	bz no_decrease
+	bz no_decrease1
 	decf time_month
 	decf time_month
 	call inc_month
@@ -775,7 +825,7 @@ year_down
 	movff time_year, output1
 	movlw 0x00
 	subwf output1
-	bz no_decrease
+	bz no_decrease1
 	decf time_year
 	movlw 0x02
 	cpfseq time_month
@@ -785,6 +835,45 @@ year_down
 	goto feb_test
 	decf time_day
 	goto feb_test
+	
+down_alarm
+	movff set_position, output1
+	movlw 0x00
+	subwf output1
+	bz hour_down_a
+	
+	movff set_position, output1
+	movlw 0x01
+	subwf output1
+	bz minute_down_a
+	
+	bra second_down_a
+
+	
+hour_down_a
+	movff alarm_hour, output1
+	movlw 0x00
+	subwf output1
+	bz no_decrease
+	decf alarm_hour
+	call write_alarm
+	goto release
+minute_down_a
+	movff alarm_min, output1
+	movlw 0x00
+	subwf output1
+	bz no_decrease
+	decf alarm_min
+	call write_alarm
+	goto release
+second_down_a
+	movff alarm_sec, output1
+	movlw 0x00
+	subwf output1
+	bz no_decrease
+	decf alarm_sec
+	call write_alarm
+	goto release
 	
 no_decrease
 	goto release
@@ -822,23 +911,59 @@ characterB
 	bra     release
 	
 characterC	
-	movlw   0x43
-	movwf   output2
-	movlw	1	; output message to LCD
-	lfsr	FSR2, output2
-	call	LCD_Write_Message
+	btfss   mode_counter, 3
+	bra	alarm_on
+	bra	alarm_off
+alarm_on
+	bsf	mode_counter, 3
+	bsf	LATH, 0
+	call	Toggle_Bell
+	bra	alarm_finish
+alarm_off
+	bcf	mode_counter, 3
+	bcf	LATH, 0
+	call	Toggle_Bell
+	bra	alarm_finish
+alarm_finish
 	bra     release
 	
 characterD	
-	movlw   0x44
-	movwf   output2
-	movlw	1	; output message to LCD
-	lfsr	FSR2, output2
-	call	LCD_Write_Message
-	bra     release
-	
+	btfsc	mode_counter, 0
+	bra	alarm_finish
+	btfsc	mode_counter, 1
+	bra	alarm_finish
+	btfsc	mode_counter, 2
+	bra	alarm_exit
+	bra	alarm_set
+alarm_exit
+	bcf	mode_counter, 2
+	bra	alarm_finish
+alarm_set
+	bsf	mode_counter, 2
+	call	write_alarm
+	call	Line_set_2
+	call    chevron
+	call	chevron
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	movlw	0x00
+	movwf   set_position
+	bra	release
+
 characterE	
 	btfsc	mode_counter, 0
+	bra     release
+	btfsc	mode_counter, 2
 	bra     release
 	btfss   mode_counter, 1
 	bra	set_date
@@ -869,6 +994,8 @@ start_date
 	
 characterF
 	btfsc	mode_counter, 1
+	bra	release
+	btfsc	mode_counter, 2
 	bra	release
 	btfss   mode_counter, 0
 	bra	set_time

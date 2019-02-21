@@ -1,6 +1,7 @@
 #include p18f87k22.inc
 
-    global  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1, LCD_Write_Hex
+    global  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1, LCD_Write_Hex, Toggle_Bell
+    extern  mode_counter
 
 
 acs0    udata_acs   ; named variables in access ram
@@ -9,6 +10,7 @@ LCD_cnt_h   res 1   ; reserve 1 byte for variable LCD_cnt_h
 LCD_cnt_ms  res 1   ; reserve 1 byte for ms counter
 LCD_tmp	    res 1   ; reserve 1 byte for temporary use
 LCD_counter res 1   ; reserve 1 byte for counting through nessage
+message	    res 1   ; reserve 1 byte for storing message data
 
 acs_ovr	access_ovr
 LCD_hex_tmp res 1   ; reserve 1 byte for variable LCD_hex_tmp	
@@ -173,6 +175,31 @@ Line_set_1
 	call LCD_Send_Byte_I 
 	movlw .250 ; wait 1ms 
 	call LCD_delay_ms
+	return
+	
+Toggle_Bell
+	movlw b'10001111' ; 2 line display 5x8 dot characters 
+	call LCD_Send_Byte_I 
+	movlw .250 ; wait 1ms 
+	call LCD_delay_ms
+	btfss	mode_counter, 3
+	bra	Bell_remove
+	bra	Bell_print
+Bell_remove
+	movlw   0x20
+	movwf   message
+	movlw	1	; output message to LCD
+	lfsr	FSR2, message
+	call	LCD_Write_Message
+	bra	Bell_End
+Bell_print
+	movlw   0x40
+	movwf   message
+	movlw	1	; output message to LCD
+	lfsr	FSR2, message
+	call	LCD_Write_Message	
+	bra	Bell_End
+Bell_End
 	return
 	
     end

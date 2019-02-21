@@ -1,11 +1,11 @@
 	#include p18f87k22.inc
 
-	global  mode_counter, write_date, write_time
+	global  mode_counter, write_date, write_time, write_alarm
 	
 	extern  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1,LCD_Write_Hex ; external LCD subroutines
 	extern  Press_test, Keypad_Setup
 	extern  Multiply_Setup, multiply		    ; external ADC routines
-	extern  DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year
+	extern  DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, alarm_sec, alarm_min, alarm_hour
 	
 acs0	udata_acs   ; reserve data space in access ram
 counter	    res 1   ; reserve one byte for a counter variable
@@ -64,6 +64,8 @@ magic_code
 	bra time_set
 	btfsc mode_counter, 1
 	bra time_set
+	btfsc mode_counter, 2
+	bra time_set
 write_time	
 	call Line_set_1
 	movff time_hour, WREG
@@ -105,18 +107,42 @@ write_date
 	bra magic_code
 
 time_set
-	btfss mode_counter, 0
-	bra month_test
-month_set
+	btfsc mode_counter, 0
+	bra   menu_loop
+	btfsc mode_counter, 1
+	bra   menu_loop
+	btfsc mode_counter, 2
+	bra   menu_loop
+	bra   magic_code
+	
+menu_loop	
 	call Press_test
-	bra time_set
+	bra  time_set
+	
+write_alarm	
+	call Line_set_1
+	movff alarm_hour, WREG
+	call multiply
+	call LCD_Write_Hex
+	call colon
+	movff alarm_min, WREG
+	call multiply
+	call LCD_Write_Hex
+	call colon
+	movff alarm_sec, WREG
+	call multiply
+	call LCD_Write_Hex
+	call spaces
+	call spaces
+	call spaces
+	call spaces
+	call spaces
+	return
+	
 	
 	goto	$		; goto current line in code , time_day, time_week, time_month, time_year
 	
-month_test
-	btfss mode_counter, 1
-	bra magic_code
-	bra month_set
+	
 	; a delay subroutine if you need one, times around loop in delay_count
 
 delay_4us		    ; delay given in chunks of 4 microsecond in W
