@@ -19,6 +19,7 @@
       <itemPath>ADC.asm</itemPath>
       <itemPath>DAC.asm</itemPath>
       <itemPath>Main.asm</itemPath>
+      <itemPath>alarm_passcode.asm</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
