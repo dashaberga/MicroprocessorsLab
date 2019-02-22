@@ -1,6 +1,6 @@
 #include p18f87k22.inc
 
-    global  Multiply_Setup, multiply
+    global  Multiply_Setup, multiply, random, random2, multiply_random
     
     
 acs0 udata_acs
@@ -13,6 +13,8 @@ RES4 res 1
 RES5 res 1
 RES6 res 1
 output res 1
+random res 1
+random2 res 1
 counter1 res 1
 counter2 res 1
 
@@ -114,4 +116,47 @@ third
 finish
     return
 
+multiply_random
+    
+    movlw   0x0d
+    MULWF   random	    ; ARG1L * ARG2L-> 
+			    ; PRODH:PRODL 
+    MOVFF   PRODH, RES1 
+    MOVFF   PRODL, RES0 
+			    ; 
+    MOVF    0x00, W 
+    MULWF   random2	    ; ARG1H * ARG2H-> 
+			    ; PRODH:PRODL 
+    MOVFF   PRODL, RES2	    ; 
+    ; 
+    MOVLW    0x0d
+    MULWF   random2		    ; ARG1L * ARG2H-> 
+	
+    MOVF    PRODL, W	    ; 
+    ADDWF   RES1	    ; Add cross 
+    MOVF    PRODH, W	    ; products 
+    ADDWFC  RES2	    ;	  	    ; 
+			    ; 
+    MOVF    0x00, W	    ; 
+    MULWF   random	    ; ARG1H * ARG2L-> 
+			    ; PRODH:PRODL 
+    MOVF    PRODL, W	    ; 
+    ADDWF   RES1	    ; Add cross 
+    MOVF    PRODH, W	    ; products 
+    ADDWFC  RES2	    ; 
+    
+    movff   RES1, random2
+    movff   RES0, random
+    
+    movlw   0x0d
+    addwf   random
+    CLRF    WREG
+    ADDWFC  random2
+    
+    bra finish    
+    
+    
+    
+    
+    
     end

@@ -3,6 +3,7 @@
     global DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, month_days, inc_month, alarm_sec, alarm_min, alarm_hour, alarm_min_cnt, alarm_sec_cnt
     
     extern mode_counter
+    extern random, random2
     
 acs0    udata_acs   ; named variables in access ram
 time_millisec res 1
@@ -247,6 +248,10 @@ DAC_Setup
     movwf alarm_min
     movlw 0x07
     movwf alarm_hour
+    movlw 0x78
+    movwf random2
+    movlw 0xdc
+    movwf random
     return
     
 alarm_test
