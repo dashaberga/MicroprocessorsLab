@@ -2,7 +2,7 @@
 
 	global  mode_counter, write_date, write_time, write_alarm
 	
-	extern  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1,LCD_Write_Hex ; external LCD subroutines
+	extern  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1,LCD_Write_Hex, Line_set_code ; external LCD subroutines
 	extern  Press_test, Keypad_Setup
 	extern  Multiply_Setup, multiply, random, random2, multiply_random		    ; external ADC routines
 	extern  DAC_Setup, time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, alarm_sec, alarm_min, alarm_hour, alarm_min_cnt, alarm_sec_cnt
@@ -161,6 +161,8 @@ snooze_countdown
 	call spaces
 	call spaces
 	call spaces
+	
+	call Line_set_code
 	
 	call Press_test
 	

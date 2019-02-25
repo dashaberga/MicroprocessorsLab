@@ -1,8 +1,8 @@
 #include p18f87k22.inc
    
     
-    global Press_test, Keypad_Setup
-    extern LCD_Write_Message, Line_set_2, Line_set_1, Toggle_Bell
+    global Press_test, Keypad_Setup, position
+    extern LCD_Write_Message, Line_set_2, Line_set_1, Toggle_Bell, Line_set_code
     extern mode_counter, write_date, write_time, write_alarm
     extern time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, month_days, inc_month, alarm_sec, alarm_min, alarm_hour, alarm_min_cnt, alarm_sec_cnt
     
@@ -19,7 +19,11 @@ cnt_ms   res 1   ; reserve 1 byte for ms counter
 position res 1   ; reserve 1 byte for tracking position on screen.
 		  ; lowest 4 bits are x, next bit is y
 set_position res 1
-   
+code_in_1 res 1
+code_in_2 res 1
+code_in_3 res 1
+code_in_4 res 1
+ 
 Keypad code
     
 Keypad_Setup
@@ -276,12 +280,36 @@ characterF0
 	
 	
 character1	;print the ascii character onto the screen
+	btfsc	mode_counter, 5
+	bra	code_1
+	btfsc	mode_counter, 6
+	bra	code_1
+	goto	release
+code_1
+	movlw   0x04
+	cpfseq  position
+	goto    print1
+	call	reset_position
+print1
 	movlw   0x31
 	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	bra     release
+	movlw	0x01
+	movwf	output1
+	call	code_in
+	goto	release
+	
+reset_position
+	clrf	position
+	call	Line_set_code
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	Line_set_code
+	return
 	
 character2	
 	btfsc   mode_counter, 0
@@ -449,13 +477,28 @@ second_up_a
 	goto release
 other1
 	bra release
+	
 character3	
+	btfsc	mode_counter, 5
+	bra	code_3
+	btfsc	mode_counter, 6
+	bra	code_3
+	goto	release
+code_3
+	movlw   0x04
+	cpfseq  position
+	goto    print3
+	call	reset_position
+print3
 	movlw   0x33
 	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	bra     release
+	movlw	0x03
+	movwf	output1
+	call	code_in
+	goto	release
 	
 character4	
 	btfsc   mode_counter, 0
@@ -576,12 +619,26 @@ other
 	bra     release
 	
 character5	
+	btfsc	mode_counter, 5
+	bra	code_5
+	btfsc	mode_counter, 6
+	bra	code_5
+	goto	release
+code_5
+	movlw   0x04
+	cpfseq  position
+	goto    print5
+	call	reset_position
+print5
 	movlw   0x35
 	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	bra     release
+	movlw	0x05
+	movwf	output1
+	call	code_in
+	goto	release
 	
 character6
 	btfsc   mode_counter, 0
@@ -659,7 +716,7 @@ right_date
 	movff set_position, output1
 	movlw 0x02
 	subwf output1
-	bz other
+	bz other2
 	
 position1_date
 	
@@ -683,7 +740,7 @@ position1_date
 	call spaces1
 	call spaces1
 	call spaces1
-	bra other
+	bra other2
 	
 position2_date
 	
@@ -704,15 +761,32 @@ position2_date
 	call spaces1
 	call spaces1
 	call spaces1
-	bra other
+	bra other2
 
 character7	
+	btfsc	mode_counter, 5
+	bra	code_7
+	btfsc	mode_counter, 6
+	bra	code_7
+	goto	release
+code_7
+	movlw   0x04
+	cpfseq  position
+	goto    print7
+	call	reset_position
+print7
 	movlw   0x37
 	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	bra     release
+	movlw	0x07
+	movwf	output1
+	call	code_in
+	goto	release
+	
+other2	
+	goto	release
 	
 character8	
 	btfsc   mode_counter, 0
@@ -721,7 +795,7 @@ character8
 	bra	down_date
 	btfsc   mode_counter, 2
 	bra	down_alarm
-	bra	other
+	bra	other2
 down
 	movff set_position, output1
 	movlw 0x00
@@ -879,20 +953,48 @@ no_decrease
 	goto release
 	
 character9	
+	btfsc	mode_counter, 5
+	bra	code_9
+	btfsc	mode_counter, 6
+	bra	code_9
+	goto	release
+code_9
+	movlw   0x04
+	cpfseq  position
+	goto    print9
+	call	reset_position
+print9
 	movlw   0x39
 	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	bra     release
+	movlw	0x09
+	movwf	output1
+	call	code_in
+	goto	release
 	
 character0	
+	btfsc	mode_counter, 5
+	bra	code_0
+	btfsc	mode_counter, 6
+	bra	code_0
+	goto	release
+code_0
+	movlw   0x04
+	cpfseq  position
+	goto    print0
+	call	reset_position
+print0
 	movlw   0x30
 	movwf   output2
 	movlw	1	; output message to LCD
 	lfsr	FSR2, output2
 	call	LCD_Write_Message
-	bra     release
+	movlw	0x00
+	movwf	output1
+	call	code_in
+	goto	release
 	
 characterA	
 	btfsc   mode_counter, 4
@@ -902,11 +1004,54 @@ characterA
 	bra     release
 	
 alarm_snooze
+	bcf	LATH, 2
 	bcf	mode_counter, 4
 	bsf	mode_counter, 5
 	movlw	0x05
 	movwf	alarm_min_cnt
 	clrf    alarm_sec_cnt
+	clrf	position
+	call    Line_set_2
+	
+	movlw   0x43
+	movwf   output1
+	movlw	1	; output message to LCD
+	lfsr	FSR2, output1
+	call	LCD_Write_Message
+	
+	movlw   0x4F
+	movwf   output1
+	movlw	1	; output message to LCD
+	lfsr	FSR2, output1
+	call	LCD_Write_Message
+	
+	movlw   0x44
+	movwf   output1
+	movlw	1	; output message to LCD
+	lfsr	FSR2, output1
+	call	LCD_Write_Message
+	
+	movlw   0x45
+	movwf   output1
+	movlw	1	; output message to LCD
+	lfsr	FSR2, output1
+	call	LCD_Write_Message
+	
+	movlw   0x3A
+	movwf   output1
+	movlw	1	; output message to LCD
+	lfsr	FSR2, output1
+	call	LCD_Write_Message
+	
+	call spaces1
+	call spaces1
+	call spaces1
+	call spaces1
+	call spaces1
+	call spaces1
+	call reset_position
+	decf position
+	
 	bra	release
 
 alarm_kill
@@ -943,6 +1088,10 @@ characterD
 	bra	alarm_finish
 	btfsc	mode_counter, 1
 	bra	alarm_finish
+	btfsc	mode_counter, 5
+	bra	alarm_finish
+	btfsc	mode_counter, 6
+	bra	alarm_finish
 	btfsc	mode_counter, 2
 	bra	alarm_exit
 	bra	alarm_set
@@ -976,6 +1125,10 @@ characterE
 	bra     release
 	btfsc	mode_counter, 2
 	bra     release
+	btfsc	mode_counter, 5
+	bra	release
+	btfsc	mode_counter, 6
+	bra	release
 	btfss   mode_counter, 1
 	bra	set_date
 	bra	start_date
@@ -1007,6 +1160,10 @@ characterF
 	btfsc	mode_counter, 1
 	bra	release
 	btfsc	mode_counter, 2
+	bra	release
+	btfsc	mode_counter, 5
+	bra	release
+	btfsc	mode_counter, 6
 	bra	release
 	btfss   mode_counter, 0
 	bra	set_time
@@ -1102,6 +1259,35 @@ spaces1
 	lfsr	FSR2, output1
 	call	LCD_Write_Message
 	return
+	
+code_in
+	movlw	0x00
+	cpfseq	position
+	bra	code_in1
+	movlw	0x01	
+	cpfseq	position
+	bra	code_in2
+	movlw	0x00
+	cpfseq	position
+	bra	code_in3
+	movlw	0x01	
+	cpfseq	position
+	bra	code_in4
+	goto	$
+	
+code_in1
+	movff output1, code_in_1
+	return
+code_in2
+	movff output1, code_in_2
+	return
+code_in3
+	movff output1, code_in_3
+	return
+code_in4
+	movff output1, code_in_4
+	return
+
     end
 
 

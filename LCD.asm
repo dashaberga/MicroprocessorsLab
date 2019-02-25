@@ -1,8 +1,8 @@
 #include p18f87k22.inc
 
-    global  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1, LCD_Write_Hex, Toggle_Bell
+    global  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1, LCD_Write_Hex, Toggle_Bell, Line_set_code
     extern  mode_counter
-
+    extern  position
 
 acs0    udata_acs   ; named variables in access ram
 LCD_cnt_l   res 1   ; reserve 1 byte for variable LCD_cnt_l
@@ -172,6 +172,17 @@ Line_set_2
 	
 Line_set_1
 	movlw b'10000000' ; 2 line display 5x8 dot characters 
+	call LCD_Send_Byte_I 
+	movlw .250 ; wait 1ms 
+	call LCD_delay_ms
+	return
+	
+Line_set_code
+	movlw b'11000101' ; 2 line display 5x8 dot characters 
+	movwf message
+	movff position, WREG
+	addwf message
+	movff message, WREG
 	call LCD_Send_Byte_I 
 	movlw .250 ; wait 1ms 
 	call LCD_delay_ms
