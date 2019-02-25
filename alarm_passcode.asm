@@ -36,6 +36,10 @@ passcode_loop
     movlw   0x14
     cpfseq  passcode_cnt
     bra	    passcode_loop
+    lfsr    1, 0x600
+    movlw   0xFF
+    movwf   POSTINC1
+    movwf   POSTINC1
     return
 
 passcode_test
@@ -60,6 +64,10 @@ passcode_test_loop2
     clrf    mode_counter
     bsf	    mode_counter, 3
     clrf    LATH
+    incf    FSR1
+    incf    FSR1
+    incf    FSR1
+    incf    FSR1
     movff   POSTINC1, random2
     movff   POSTINC1, random
     call    passcode_set
