@@ -5,7 +5,7 @@
     extern LCD_Write_Message, Line_set_2, Line_set_1, Toggle_Bell, Line_set_code
     extern mode_counter, write_date, write_time, write_alarm
     extern time_sec, time_min, time_hour, time_day, time_week, time_month, time_year, month_days, inc_month, alarm_sec, alarm_min, alarm_hour, alarm_min_cnt, alarm_sec_cnt
-    
+    extern passcode_test, passcode_test1, passcode_test2
  
 acs0	udata_acs   ; reserve data space in access ram
 counter1 res 1
@@ -299,6 +299,7 @@ print1
 	movlw	0x01
 	movwf	output1
 	call	code_in
+	incf    position
 	goto	release
 	
 reset_position
@@ -312,6 +313,10 @@ reset_position
 	return
 	
 character2	
+	btfsc	mode_counter, 5
+	bra	code_2
+	btfsc	mode_counter, 6
+	bra	code_2
 	btfsc   mode_counter, 0
 	bra	up
 	btfsc   mode_counter, 1
@@ -478,6 +483,23 @@ second_up_a
 other1
 	bra release
 	
+code_2
+	movlw   0x04
+	cpfseq  position
+	goto    print2
+	call	reset_position
+print2
+	movlw   0x32
+	movwf   output2
+	movlw	1	; output message to LCD
+	lfsr	FSR2, output2
+	call	LCD_Write_Message
+	movlw	0x02
+	movwf	output1
+	call	code_in
+	incf    position
+	goto	release
+	
 character3	
 	btfsc	mode_counter, 5
 	bra	code_3
@@ -498,9 +520,14 @@ print3
 	movlw	0x03
 	movwf	output1
 	call	code_in
+	incf    position
 	goto	release
 	
 character4	
+	btfsc	mode_counter, 5
+	bra	code_4
+	btfsc	mode_counter, 6
+	bra	code_4
 	btfsc   mode_counter, 0
 	bra	left
 	btfsc   mode_counter, 1
@@ -618,6 +645,23 @@ position_n2_date
 other
 	bra     release
 	
+code_4
+	movlw   0x04
+	cpfseq  position
+	goto    print4
+	call	reset_position
+print4
+	movlw   0x34
+	movwf   output2
+	movlw	1	; output message to LCD
+	lfsr	FSR2, output2
+	call	LCD_Write_Message
+	movlw	0x04
+	movwf	output1
+	call	code_in
+	incf    position
+	goto	release
+	
 character5	
 	btfsc	mode_counter, 5
 	bra	code_5
@@ -638,9 +682,14 @@ print5
 	movlw	0x05
 	movwf	output1
 	call	code_in
+	incf    position
 	goto	release
 	
 character6
+	btfsc	mode_counter, 5
+	bra	code_6
+	btfsc	mode_counter, 6
+	bra	code_6
 	btfsc   mode_counter, 0
 	bra	right
 	btfsc   mode_counter, 1
@@ -763,6 +812,23 @@ position2_date
 	call spaces1
 	bra other2
 
+code_6
+	movlw   0x04
+	cpfseq  position
+	goto    print6
+	call	reset_position
+print6
+	movlw   0x36
+	movwf   output2
+	movlw	1	; output message to LCD
+	lfsr	FSR2, output2
+	call	LCD_Write_Message
+	movlw	0x06
+	movwf	output1
+	call	code_in
+	incf    position
+	goto	release
+
 character7	
 	btfsc	mode_counter, 5
 	bra	code_7
@@ -783,12 +849,17 @@ print7
 	movlw	0x07
 	movwf	output1
 	call	code_in
+	incf    position
 	goto	release
 	
 other2	
 	goto	release
 	
 character8	
+	btfsc	mode_counter, 5
+	bra	code_8
+	btfsc	mode_counter, 6
+	bra	code_8
 	btfsc   mode_counter, 0
 	bra	down
 	btfsc   mode_counter, 1
@@ -952,6 +1023,23 @@ second_down_a
 no_decrease
 	goto release
 	
+code_8
+	movlw   0x04
+	cpfseq  position
+	goto    print8
+	call	reset_position
+print8
+	movlw   0x38
+	movwf   output2
+	movlw	1	; output message to LCD
+	lfsr	FSR2, output2
+	call	LCD_Write_Message
+	movlw	0x08
+	movwf	output1
+	call	code_in
+	incf    position
+	goto	release
+	
 character9	
 	btfsc	mode_counter, 5
 	bra	code_9
@@ -972,6 +1060,7 @@ print9
 	movlw	0x09
 	movwf	output1
 	call	code_in
+	incf    position
 	goto	release
 	
 character0	
@@ -994,11 +1083,14 @@ print0
 	movlw	0x00
 	movwf	output1
 	call	code_in
+	incf    position
 	goto	release
 	
 characterA	
 	btfsc   mode_counter, 4
 	bra     alarm_snooze
+	btfsc   mode_counter, 5
+	bra     alarm_kill
 	btfsc   mode_counter, 6
 	bra     alarm_kill
 	bra     release
@@ -1050,20 +1142,15 @@ alarm_snooze
 	call spaces1
 	call spaces1
 	call reset_position
-	decf position
 	
 	bra	release
 
 alarm_kill
-	bcf	mode_counter, 6
+	call	passcode_translate
+	call	passcode_test
 	bra	release
 	
 characterB	
-	movlw   0x42
-	movwf   output2
-	movlw	1	; output message to LCD
-	lfsr	FSR2, output2
-	call	LCD_Write_Message
 	bra     release
 	
 characterC	
@@ -1218,6 +1305,10 @@ line2
 	bra      finish
 	bra      line_change
 finish
+	btfsc	 mode_counter, 5
+	bra	 finish2
+	btfsc	 mode_counter, 6
+	bra	 finish2
 	incf     position
 finish2
 	return
@@ -1287,7 +1378,15 @@ code_in3
 code_in4
 	movff output1, code_in_4
 	return
-
+	
+passcode_translate
+	swapf   code_in_1, 1, 0
+	swapf   code_in_3, 1, 0
+	movff	code_in_1, WREG
+	addwf	code_in_2
+	movff	code_in_3, WREG
+	addwf	code_in_4
+	movff	code_in_2, passcode_test2
+	movff	code_in_4, passcode_test
+	return
     end
-
-

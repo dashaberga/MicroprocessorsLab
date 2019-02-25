@@ -4,6 +4,7 @@
     
     extern mode_counter
     extern random, random2
+    extern passcode_set
     
 acs0    udata_acs   ; named variables in access ram
 time_millisec res 1
@@ -252,6 +253,7 @@ DAC_Setup
     movwf random2
     movlw 0xdc
     movwf random
+    call  passcode_set
     return
     
 alarm_test
@@ -355,4 +357,3 @@ snooze_dmin3
     return
 
     end
-

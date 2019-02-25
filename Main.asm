@@ -164,7 +164,7 @@ snooze_countdown
 	
 	call Line_set_code
 	
-	call Press_test
+	call Press_test	
 	
 	movlw 0x00
 	cpfseq alarm_sec_cnt
