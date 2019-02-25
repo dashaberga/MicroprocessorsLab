@@ -23,6 +23,10 @@ code_in_1 res 1
 code_in_2 res 1
 code_in_3 res 1
 code_in_4 res 1
+code_temp_1 res 1
+code_temp_2 res 1
+code_temp_3 res 1
+code_temp_4 res 1
  
 Keypad code
     
@@ -1354,39 +1358,68 @@ spaces1
 code_in
 	movlw	0x00
 	cpfseq	position
+	bra	code_ina
 	bra	code_in1
+code_ina
 	movlw	0x01	
 	cpfseq	position
+	bra	code_inb
 	bra	code_in2
-	movlw	0x00
+code_inb	
+	movlw	0x02
 	cpfseq	position
+	bra	code_inc
 	bra	code_in3
-	movlw	0x01	
+code_inc	
+	movlw	0x03	
 	cpfseq	position
+	bra	death
 	bra	code_in4
+death
 	goto	$
 	
 code_in1
+	clrf  code_in_1
 	movff output1, code_in_1
 	return
 code_in2
+	clrf  code_in_2
 	movff output1, code_in_2
 	return
 code_in3
+	clrf  code_in_3
 	movff output1, code_in_3
 	return
 code_in4
+	clrf  code_in_4
 	movff output1, code_in_4
 	return
 	
 passcode_translate
-	swapf   code_in_1, 1, 0
-	swapf   code_in_3, 1, 0
-	movff	code_in_1, WREG
-	addwf	code_in_2
-	movff	code_in_3, WREG
-	addwf	code_in_4
-	movff	code_in_2, passcode_test2
-	movff	code_in_4, passcode_test
+	clrf	passcode_test
+	clrf	passcode_test2
+	clrf	0x50
+	clrf	0x51
+	clrf	0x52
+	clrf	0x53
+	movff	code_in_1, 0x50
+	movff	code_in_2, 0x51
+	movff	code_in_3, 0x52
+	movff	code_in_4, 0x53
+	movff	code_in_1, code_temp_1
+	movff	code_in_2, code_temp_2
+	movff	code_in_3, code_temp_3
+	movff	code_in_4, code_temp_4
+	swapf   code_temp_1, 1, 0
+	swapf   code_temp_3, 1, 0
+	movff	code_temp_1, WREG
+	addwf	code_temp_2
+	movff	code_temp_3, WREG
+	addwf	code_temp_4
+	movff	code_temp_2, passcode_test2
+	movff	code_temp_4, passcode_test
+	movff	code_temp_2, 0x54
+	movff	code_temp_4, 0x55
+	
 	return
     end

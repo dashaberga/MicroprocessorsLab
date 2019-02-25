@@ -11,6 +11,7 @@ LCD_cnt_ms  res 1   ; reserve 1 byte for ms counter
 LCD_tmp	    res 1   ; reserve 1 byte for temporary use
 LCD_counter res 1   ; reserve 1 byte for counting through nessage
 message	    res 1   ; reserve 1 byte for storing message data
+message2    res 1
 
 acs_ovr	access_ovr
 LCD_hex_tmp res 1   ; reserve 1 byte for variable LCD_hex_tmp	
@@ -179,10 +180,10 @@ Line_set_1
 	
 Line_set_code
 	movlw b'11000101' ; 2 line display 5x8 dot characters 
-	movwf message
+	movwf message2
 	movff position, WREG
-	addwf message
-	movff message, WREG
+	addwf message2
+	movff message2, WREG
 	call LCD_Send_Byte_I 
 	movlw .250 ; wait 1ms 
 	call LCD_delay_ms
