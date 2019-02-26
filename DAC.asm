@@ -55,7 +55,7 @@ inc_second                              ;routine to increment seconds register e
     subwf temp_storage
     bz inc_minute
     incf time_sec    
-    bcf PIR1,TMR2I                       ; clear interrupt flag
+    bcf PIR1,TMR2IF                       ; clear interrupt flag
     retfie FAST                          ; fast return from interrupt
     
 inc_minute                              ;routine to incriment minute register, every 60 seconds and branch to incriment hour after 60 minutes

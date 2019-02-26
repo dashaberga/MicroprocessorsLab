@@ -35,10 +35,6 @@ passcode_loop
     movlw   0x14
     cpfseq  passcode_cnt    ; check when 20 codes have been generated
     bra	    passcode_loop   ; loop if less than 20 codes generated
-    lfsr    1, 0x600	    ; move file select register to first code
-    movlw   0xFF	    
-    movwf   POSTINC1	    ; erase first code (to prevent multiple uses)
-    movwf   POSTINC1
     return
 
 passcode_test	; take input code from Keypad/LCD and compares it to valid codes
@@ -63,18 +59,18 @@ passcode_test_loop2
     clrf    mode_counter		; clear mode counter & enable alarm
     bsf	    mode_counter, 3
     clrf    LATH			; clear LATH (disable alarm)
-    incf    FSR1			; increment file select register
-    incf    FSR1
-    incf    FSR1
-    incf    FSR1
+    incf    FSR1L			; increment file select register
+    incf    FSR1L
+    incf    FSR1L
+    incf    FSR1L
     movff   POSTINC1, random2		; place new seed into rng
     movff   POSTINC1, random
     call    passcode_set		; generate new codes with rng
     return
     
 passcode_test_loop3
-    incf    FSR1			; increment FSR1 past rng seeds
-    incf    FSR1
+    incf    FSR1L			; increment FSR1 past rng seeds
+    incf    FSR1L
     bra	    passcode_test_loop		; loop back to passcode test loop
     
     end
