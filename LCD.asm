@@ -1,8 +1,8 @@
 #include p18f87k22.inc
 
-    global  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1, LCD_Write_Hex, Toggle_Bell, Line_set_code
-    extern  mode_counter
-    extern  position
+    global  LCD_Setup, LCD_Write_Message, LCD_clear, Line_set_2, Line_set_1, LCD_Write_Hex, Toggle_Bell, Line_set_code	;external LCD subroutines
+    extern  mode_counter    ;external mode tracker
+    extern  position	    ;external LCD position tracker
 
 acs0    udata_acs   ; named variables in access ram
 LCD_cnt_l   res 1   ; reserve 1 byte for variable LCD_cnt_l
@@ -11,7 +11,7 @@ LCD_cnt_ms  res 1   ; reserve 1 byte for ms counter
 LCD_tmp	    res 1   ; reserve 1 byte for temporary use
 LCD_counter res 1   ; reserve 1 byte for counting through nessage
 message	    res 1   ; reserve 1 byte for storing message data
-message2    res 1
+message2    res 1   ; reserve 1 byte for storing other data
 
 acs_ovr	access_ovr
 LCD_hex_tmp res 1   ; reserve 1 byte for variable LCD_hex_tmp	
@@ -156,7 +156,7 @@ lcdlp1	decf 	LCD_cnt_l,F	; no carry when 0x00 -> 0xff
 	return			; carry reset so return
 
 LCD_clear
-	movlw b'00000001' ; 2 line display 5x8 dot characters 
+	movlw b'00000001' ; clear screen command
 	call LCD_Send_Byte_I 
 	movlw .250 ; wait 1ms 
 	call LCD_delay_ms
@@ -165,46 +165,46 @@ LCD_clear
 	return
 	
 Line_set_2
-	movlw b'11000000' ; 2 line display 5x8 dot characters 
+	movlw b'11000000' ; set cursor to line 2 (far left)
 	call LCD_Send_Byte_I 
 	movlw .250 ; wait 1ms 
 	call LCD_delay_ms
 	return
 	
 Line_set_1
-	movlw b'10000000' ; 2 line display 5x8 dot characters 
+	movlw b'10000000' ; set cursor to line 1 (far left) 
 	call LCD_Send_Byte_I 
 	movlw .250 ; wait 1ms 
 	call LCD_delay_ms
 	return
 	
-Line_set_code
-	movlw b'11000101' ; 2 line display 5x8 dot characters 
+Line_set_code	; moves cursor to correct position when writing the passcode
+	movlw b'11000101' ; byte corresponds to LCD address line 2, character 6
 	movwf message2
-	movff position, WREG
+	movff position, WREG	;add "position" to LCD address
 	addwf message2
-	movff message2, WREG
+	movff message2, WREG	;move cursor to the new position
 	call LCD_Send_Byte_I 
 	movlw .250 ; wait 1ms 
 	call LCD_delay_ms
 	return
 	
-Toggle_Bell
-	movlw b'10001111' ; 2 line display 5x8 dot characters 
+Toggle_Bell ;subroutine for toggling bell icon in top right corner of screen
+	movlw b'10001111' ; set cursor to top corner
 	call LCD_Send_Byte_I 
-	movlw .250 ; wait 1ms 
+	movlw .250	    ; wait 1ms 
 	call LCD_delay_ms
-	btfss	mode_counter, 3
+	btfss	mode_counter, 3	; check if alarm is enabled or disabled
 	bra	Bell_remove
 	bra	Bell_print
-Bell_remove
+Bell_remove	; if alarm is disabled, print a space (clears bell)
 	movlw   0x20
 	movwf   message
 	movlw	1	; output message to LCD
 	lfsr	FSR2, message
 	call	LCD_Write_Message
 	bra	Bell_End
-Bell_print
+Bell_print	; if alarm is disabled, print an @ symbol (placeholder bell)
 	movlw   0x40
 	movwf   message
 	movlw	1	; output message to LCD
