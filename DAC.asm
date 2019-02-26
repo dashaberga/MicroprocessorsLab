@@ -29,29 +29,28 @@ month_days res 1
 int_hi code 0x0008                      ; high vector, no low vector
     btfss PIR1,TMR2IF                   ; check that this is timer0 interrupt 
     retfie FAST                         ; if not then return 
-    btfsc mode_counter, 0
-    bra time_stop
+    btfsc mode_counter, 0		; check if time is being set
+    bra time_stop			; return if time is being set
     movff time_millisec, temp_storage
-    movlw 0xf9                          ;postscaler of 256 for timer 2
+    movlw 0xf9                          ; postscaler of 250 for timer 2
     subwf temp_storage
-    bz inc_second
-    incf time_millisec
-    btfsc mode_counter, 4
+    bz inc_second			; increment second when postscaler overflows
+    incf time_millisec			; increment postscaler
+    btfsc mode_counter, 4		; play alarm tone if mode 4 is active
     call alarm_tone
-    btfsc mode_counter, 6
+    btfsc mode_counter, 6		; play alarm tone if mode 6 is active
     call alarm_tone
     bcf PIR1,TMR2IF                     ; clear interrupt flag
     retfie FAST                         ; fast return from interrupt
     
 inc_second                              ;routine to increment seconds register every second
     btfss mode_counter, 2
-    call  alarm_test
+    call  alarm_test			; if alarm is enabled, check if alarm should be activated
     btfsc mode_counter, 5
-    call  snooze_dsec
-    movlw 0x00
-    movwf time_millisec
+    call  snooze_dsec			; if snooze counter is active, decrement it
+    clrf time_millisec			; clear timer 2 postscaler
     movff time_sec, temp_storage
-    movlw 0x3b
+    movlw 0x3b				;increment minute if seconds = 60
     subwf temp_storage
     bz inc_minute
     incf time_sec    
@@ -59,15 +58,15 @@ inc_second                              ;routine to increment seconds register e
     retfie FAST                          ; fast return from interrupt
     
 inc_minute                              ;routine to incriment minute register, every 60 seconds and branch to incriment hour after 60 minutes
-    movlw 0x00
-    movwf time_sec
+    clrf time_sec
     movff time_min, temp_storage
-    movlw 0x3b
+    movlw 0x3b				;increment hour if minutess = 60
     subwf temp_storage
     bz inc_hour
     incf time_min
     bcf PIR1,TMR2IF ; clear interrupt flag
     retfie FAST ; fast return from interrupt
+    
 inc_hour                                ;routine to incriment hour register, every 60 minutes and branch to incriment day after 24 hours
     movlw 0x00
     movwf time_min
@@ -78,6 +77,7 @@ inc_hour                                ;routine to incriment hour register, eve
     incf time_hour
     bcf PIR1,TMR2IF ; clear interrupt flag
     retfie FAST ; fast return from interrupt
+    
 inc_day                                 ;routine to incriment week day register, every 24 hours and branch to new_week after 7 days
     movlw 0x00
     movwf time_hour
@@ -86,6 +86,7 @@ inc_day                                 ;routine to incriment week day register,
     subwf temp_storage
     bz new_week
     incf time_week
+    
 date                                    ;routine to incriment day of month register, every 24 hours and branch to incriment month after 28-31 days depending on a month
     btfsc mode_counter, 1
     bra   time_stop
@@ -186,14 +187,14 @@ february                    ;block of routines to figure out leap/not a leap yea
     bra february_leap
     
 february_no_leap
-    movlw 0x1c
+    movlw 0x1c		    ; set month_days to 28
     movwf month_days
     movlw 0x01
     addwf time_leap
     bra inc_month2
     
 february_leap
-    movlw 0x1d
+    movlw 0x1d		    ; set month_days to 29
     movwf month_days
     movlw 0x01
     movwf time_leap
@@ -223,9 +224,9 @@ DAC_Setup
     bsf INTCON,GIE ; Enable all interrupts return
     bsf INTCON,PEIE ; Enable all interrupts return
     movlw 0x00
-    movwf TRISH
+    movwf TRISH	    ; enable outputs on LATH and clear it
     movwf LATH
-    movwf time_millisec
+    movwf time_millisec	; set initial values for various file registers on startup
     movlw 0x1f
     movwf time_day
     movlw 0x07
@@ -316,7 +317,7 @@ alarm_tone8
 alarm_tone_end
     return
     
-alarm_tone_toggle
+alarm_tone_toggle	;toggles alarm beep on & off
     btfss LATH, 2
     bra tone_on
     bra tone_off
@@ -328,7 +329,7 @@ tone_off
     bcf LATH, 2
     return
     
-                                    ;initialise snooze
+                                    ;decrement snooze timer
 snooze_dsec
     movlw 0x00
     cpfseq alarm_sec_cnt
