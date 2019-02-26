@@ -26,13 +26,13 @@ month_days res 1
 
 
 
-int_hi code 0x0008 ; high vector, no low vector
-    btfss PIR1,TMR2IF ; check that this is timer0 interrupt 
-    retfie FAST ; if not then return 
+int_hi code 0x0008                      ; high vector, no low vector
+    btfss PIR1,TMR2IF                   ; check that this is timer0 interrupt 
+    retfie FAST                         ; if not then return 
     btfsc mode_counter, 0
     bra time_stop
     movff time_millisec, temp_storage
-    movlw 0xf9 ;should be f9
+    movlw 0xf9                          ;postscaler of 256 for timer 2
     subwf temp_storage
     bz inc_second
     incf time_millisec
@@ -40,10 +40,10 @@ int_hi code 0x0008 ; high vector, no low vector
     call alarm_tone
     btfsc mode_counter, 6
     call alarm_tone
-    bcf PIR1,TMR2IF ; clear interrupt flag
-    retfie FAST ; fast return from interrupt
+    bcf PIR1,TMR2IF                     ; clear interrupt flag
+    retfie FAST                         ; fast return from interrupt
     
-inc_second
+inc_second                              ;routine to increment seconds register every second
     btfss mode_counter, 2
     call  alarm_test
     btfsc mode_counter, 5
@@ -55,10 +55,10 @@ inc_second
     subwf temp_storage
     bz inc_minute
     incf time_sec    
-    bcf PIR1,TMR2IF ; clear interrupt flag
-    retfie FAST ; fast return from interrupt
+    bcf PIR1,TMR2I                       ; clear interrupt flag
+    retfie FAST                          ; fast return from interrupt
     
-inc_minute
+inc_minute                              ;routine to incriment minute register, every 60 seconds and branch to incriment hour after 60 minutes
     movlw 0x00
     movwf time_sec
     movff time_min, temp_storage
@@ -68,7 +68,7 @@ inc_minute
     incf time_min
     bcf PIR1,TMR2IF ; clear interrupt flag
     retfie FAST ; fast return from interrupt
-inc_hour
+inc_hour                                ;routine to incriment hour register, every 60 minutes and branch to incriment day after 24 hours
     movlw 0x00
     movwf time_min
     movff time_hour, temp_storage
@@ -78,7 +78,7 @@ inc_hour
     incf time_hour
     bcf PIR1,TMR2IF ; clear interrupt flag
     retfie FAST ; fast return from interrupt
-inc_day
+inc_day                                 ;routine to incriment week day register, every 24 hours and branch to new_week after 7 days
     movlw 0x00
     movwf time_hour
     movff time_week, temp_storage
@@ -86,7 +86,7 @@ inc_day
     subwf temp_storage
     bz new_week
     incf time_week
-date
+date                                    ;routine to incriment day of month register, every 24 hours and branch to incriment month after 28-31 days depending on a month
     btfsc mode_counter, 1
     bra   time_stop
     movff time_day, temp_storage
@@ -94,15 +94,15 @@ date
     subwf temp_storage
     bz inc_month
     incf time_day
-    bcf PIR1,TMR2IF ; clear interrupt flag
-    retfie FAST ; fast return from interrupt
+    bcf PIR1,TMR2IF                     ; clear interrupt flag
+    retfie FAST                         ; fast return from interrupt
 
-new_week
+new_week                                ;routine to reset weekdays back to monday after sunday
     movlw 0x01
     movwf time_week
     bra date
     
-inc_month
+inc_month                               ;a block of if statements to point to a number of days in each month
     movff time_month, temp_storage
     movlw    0x01
     subwf    temp_storage
@@ -155,7 +155,7 @@ inc_month
     
     bra       month31
     
-inc_month2
+inc_month2                          ;routine to reset date at the end of the year and increment year
     btfsc mode_counter, 1
     return
     movlw 0x01
@@ -165,20 +165,20 @@ inc_month2
     subwf temp_storage
     bz inc_year
     incf time_month
-    bcf PIR1,TMR2IF ; clear interrupt flag
-    retfie FAST ; fast return from interrupt
+    bcf PIR1,TMR2IF                  ; clear interrupt flag
+    retfie FAST                     ; fast return from interrupt
 
-month30
+month30                     ;routine for month with 30 days
     movlw 0x1e
     movwf month_days
     bra inc_month2
     
-month31
+month31                     ;routine for month with 31 days
     movlw 0x1f
     movwf month_days
     bra inc_month2
     
-february
+february                    ;block of routines to figure out leap/not a leap year in order to set february days
     btfsc time_year, 1
     bra february_no_leap
     btfsc time_year, 0
@@ -199,21 +199,21 @@ february_leap
     movwf time_leap
     bra inc_month2
     
-inc_year
+inc_year                    ;routine to increment year
     movlw 0x01
     movwf time_month
     incf time_year
     bcf PIR1,TMR2IF ; clear interrupt flag
     retfie FAST ; fast return from interrupt
     
-time_stop
+time_stop                   ;routine to stop time
     bcf PIR1,TMR2IF ; clear interrupt flag
     retfie FAST ; fast return from interrupt
     
     goto    $
     
 DAC code
-
+                            ;Setup for initial date, time and timers
 DAC_Setup
     movlw b'01111111' ; Set timer0 to 16-bit, Fosc/4/256 
     movwf T2CON ; = 62.5KHz clock rate, approx 1sec rollover
@@ -256,7 +256,7 @@ DAC_Setup
     call  passcode_set
     return
     
-alarm_test
+alarm_test              ;test if alarm on 
     btfss mode_counter, 3
     return    
     movff alarm_hour, WREG
@@ -272,6 +272,7 @@ alarm_test
     bsf	 LATH, 1
     return
     
+                        ;set alarm to beep, instead of constant output
 alarm_tone
     movlw 0x28
     cpfseq time_millisec
@@ -327,6 +328,7 @@ tone_off
     bcf LATH, 2
     return
     
+                                    ;initialise snooze
 snooze_dsec
     movlw 0x00
     cpfseq alarm_sec_cnt
