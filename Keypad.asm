@@ -126,8 +126,8 @@ button_select2
 something    
     movff   output1, output2
     decf    counter1
-    movlw .2
-    call delay_ms
+    movlw   .2
+    call    delay_ms
     bra     Press_test_1
     
 press
@@ -167,7 +167,7 @@ lp1	decf 	cnt_l,F	; no carry when 0x00 -> 0xff
 	bc 	lp1		; carry, then loop again
 	return	    
     
-translate        ;multiple if statements for every valid command
+translate        ;multiple if statements for every valid command to translate keyboard inputs
 	movff output1, output2
 	movlw 0xEE
 	subwf output2
@@ -281,7 +281,15 @@ characterE0
 characterF0
 	goto characterF
 	
-	
+reset_position
+	clrf	position
+	call	Line_set_code
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	spaces1
+	call	Line_set_code
+	return	
 	
 character1	;print the ascii character onto the screen
 	btfsc	mode_counter, 5
@@ -306,15 +314,7 @@ print1
 	incf    position
 	goto	release
 	
-reset_position
-	clrf	position
-	call	Line_set_code
-	call	spaces1
-	call	spaces1
-	call	spaces1
-	call	spaces1
-	call	Line_set_code
-	return
+
 	
 character2	
 	btfsc	mode_counter, 5
@@ -328,28 +328,28 @@ character2
 	btfsc	mode_counter, 2
 	bra	up_alarm
 	goto	other1
-up
-	movff set_position, output1
+up				    ;set up for up arrow on button 2, which incriments time/date by 1
+	movff set_position, output1 ;if cursor at position 0, then branch to incriment  hour register by 1
 	movlw 0x00
 	subwf output1
 	bz hour_up
 	
-	movff set_position, output1
+	movff set_position, output1 ;if cursor at position 1, then branch to incriment minute register by 1
 	movlw 0x01
 	subwf output1
 	bz minute_up
 	
-	movff set_position, output1
+ 	movff set_position, output1 ; if cursor at position 2, then branch to incriment second register by 1
 	movlw 0x02
 	subwf output1
 	bz second_up
 	
-	movff set_position, output1
+	movff set_position, output1 ; if cursor at position 3, then branch to incriment weekday register by 1
 	movlw 0x03
 	subwf output1
 	bz week_up
 	
-hour_up
+hour_up                             ; routine to increment hour register, allowed values between 0 and 23
 	movff time_hour, output1
 	movlw 0x17
 	subwf output1
@@ -357,7 +357,7 @@ hour_up
 	incf time_hour
 	call write_time
 	goto release
-minute_up
+minute_up			    ; routine to increment minute register, allowed values between 0 and 59
 	movff time_min, output1
 	movlw 0x3b
 	subwf output1
@@ -365,7 +365,7 @@ minute_up
 	incf time_min
 	call write_time
 	goto release
-second_up
+second_up			    ; routine to increment seconds register, allowed values between 0 and 59
 	movff time_sec, output1
 	movlw 0x3b
 	subwf output1
@@ -373,7 +373,7 @@ second_up
 	incf time_sec
 	call write_time
 	goto release
-week_up
+week_up				    ; routine to increment weekday register, allowed values between Monday and Sunday 
 	movff time_week, output1
 	movlw 0x07
 	subwf output1
@@ -871,7 +871,7 @@ character8
 	btfsc   mode_counter, 2
 	bra	down_alarm
 	bra	other2
-down
+down				     ;set up for down arrow on button 8, which decriments time/date by 1
 	movff set_position, output1
 	movlw 0x00
 	subwf output1
@@ -1317,7 +1317,7 @@ finish
 finish2
 	return
 	
-line_change
+line_change           ;function to switch to 2nd line, when run out of space on the first line
     movlw    0x0F
     subwf    position
     bz       set_line2
