@@ -7,7 +7,7 @@
     extern passcode_set
     
 acs0    udata_acs   ; named variables in access ram
-time_millisec res 1
+time_millisec res 1 ; Hex numbers for storing current time (milliseconds counts +1 every 4 milliseconds)
 time_sec  res 1
 time_min  res 1
 time_hour res 1
@@ -16,13 +16,13 @@ time_week res 1		; day of the week
 time_month res 1
 time_year res 1
 time_leap res 1
-alarm_sec  res 1
+alarm_sec  res 1    ; alarm time 
 alarm_min  res 1
 alarm_hour res 1
-alarm_sec_cnt  res 1
+alarm_sec_cnt  res 1    ; counters for alarm snooze
 alarm_min_cnt  res 1 
-temp_storage res 1
-month_days res 1
+temp_storage res 1  ; temporary value storage register
+month_days res 1    ; stores the number of days in the current month
 
 
 
@@ -216,13 +216,13 @@ time_stop                   ;routine to stop time
 DAC code
                             ;Setup for initial date, time and timers
 DAC_Setup
-    movlw b'01111111' ; Set timer0 to 16-bit, Fosc/4/256 
-    movwf T2CON ; = 62.5KHz clock rate, approx 1sec rollover
+    movlw b'01111111'   ; Set timer2 to 8-bit, Fosc/4
+    movwf T2CON         ; = 16MHz clock rate, 62.5KHz rollover
     movlw 0xF9
-    movwf PR2
-    bsf PIE1,TMR2IE ; Enable timer0 interrupt 
-    bsf INTCON,GIE ; Enable all interrupts return
-    bsf INTCON,PEIE ; Enable all interrupts return
+    movwf PR2           ; 250x prescaler to interrupt, interrupt frequency 250Hz
+    bsf PIE1,TMR2IE     ; Enable timer2 interrupt 
+    bsf INTCON,GIE      ; Enable all interrupts return
+    bsf INTCON,PEIE     ; Enable all interrupts return
     movlw 0x00
     movwf TRISH	    ; enable outputs on LATH and clear it
     movwf LATH
